@@ -1,0 +1,2 @@
+recursive-include ai_erpnext_chat *
+include README.md

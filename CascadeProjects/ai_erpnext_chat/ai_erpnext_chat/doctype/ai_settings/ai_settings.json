@@ -1,0 +1,49 @@
+{
+  "doctype": "DocType",
+  "name": "AI Settings",
+  "module": "AI ERPNext Chat",
+  "custom": 0,
+  "istable": 0,
+  "editable_grid": 0,
+  "is_submittable": 0,
+  "track_changes": 0,
+  "allow_rename": 0,
+  "allow_copy": 0,
+  "is_virtual": 0,
+  "read_only": 0,
+  "naming_rule": "Set by user",
+  "autoname": "",
+  "allow_guest_to_view": 0,
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "submit": 0
+    },
+    {
+      "role": "All",
+      "read": 1
+    }
+  ],
+  "issingle": 1,
+  "fields": [
+    {"fieldname": "section_runtime", "fieldtype": "Section Break", "label": "Runtime"},
+    {"fieldname": "use_local", "fieldtype": "Check", "label": "Use Local llama-server", "default": "1"},
+    {"fieldname": "model_path", "fieldtype": "Data", "label": "Model Path (GGUF)", "reqd": 0},
+    {"fieldname": "server_port", "fieldtype": "Int", "label": "Server Port", "default": 8081},
+    {"fieldname": "ctx_size", "fieldtype": "Int", "label": "Context Size", "default": 2048},
+    {"fieldname": "n_predict", "fieldtype": "Int", "label": "Max Tokens (n_predict)", "default": 700},
+
+    {"fieldname": "section_detect", "fieldtype": "Section Break", "label": "Detected & Chosen (Read-only)"},
+    {"fieldname": "detected_ram_gb", "fieldtype": "Float", "label": "Detected RAM (GB)", "read_only": 1},
+    {"fieldname": "cpu_features", "fieldtype": "Small Text", "label": "CPU Features", "read_only": 1},
+    {"fieldname": "gpu_type", "fieldtype": "Data", "label": "GPU Type", "read_only": 1},
+    {"fieldname": "chosen_model", "fieldtype": "Data", "label": "Chosen Model", "read_only": 1},
+    {"fieldname": "chosen_quant", "fieldtype": "Data", "label": "Chosen Quant", "read_only": 1},
+    {"fieldname": "ngl_offload", "fieldtype": "Int", "label": "NGL Offload", "read_only": 1},
+    {"fieldname": "effective_ctx", "fieldtype": "Int", "label": "Effective Context Size", "read_only": 1}
+  ]
+}

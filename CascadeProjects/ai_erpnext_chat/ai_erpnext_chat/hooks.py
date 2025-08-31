@@ -1,0 +1,17 @@
+app_name = "ai_erpnext_chat"
+app_title = "AI ERPNext Chat"
+app_publisher = "Your Company"
+app_description = "Offline AI chat via llama.cpp (Gemma) for ERPNext"
+app_icon = "octicon octicon-comment-discussion"
+app_color = "blue"
+app_email = "ops@example.com"
+app_license = "MIT"
+app_version = "0.0.1"
+
+# Include JS in Desk
+app_include_js = [
+    "/assets/ai_erpnext_chat/js/ai_chat.js",
+]
+
+# Post-install hook (skeleton)
+after_install = "ai_erpnext_chat.install.after_install"

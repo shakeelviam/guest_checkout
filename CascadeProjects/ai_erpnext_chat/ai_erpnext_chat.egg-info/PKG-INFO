@@ -1,0 +1,30 @@
+Metadata-Version: 2.4
+Name: ai_erpnext_chat
+Version: 0.0.1
+Summary: Offline AI chat via llama.cpp (Gemma) for ERPNext
+Author: Your Company
+License: MIT
+Description-Content-Type: text/markdown
+Dynamic: author
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: license
+Dynamic: summary
+
+# ai_erpnext_chat
+
+Offline "Ask ERPNext (AI)" add-on using local Gemma via llama.cpp (llama-server). No Docker. No paid APIs. On-prem inference bound to 127.0.0.1.
+
+## Quick Start (skeleton)
+- Install the app into your bench site as usual (after you place the repo inside apps/). This skeleton includes:
+  - Backend API stub: `ai_erpnext_chat/api.py` → `ask_ai`
+  - Curated ORM-only report stubs: `ai_erpnext_chat/reports/curated.py`
+  - AI Settings DocType: `ai_erpnext_chat/doctype/ai_settings/ai_settings.json`
+  - Installer script: `scripts/install_ai_backend.sh`
+  - Systemd template: `deployment/erpnext-gemma.service.template`
+  - Frontend Desk UI: `ai_erpnext_chat/public/js/ai_chat.js`
+
+## Notes
+- This is a skeleton. The installer script is a placeholder for resource detection and llama.cpp setup.
+- llama-server must listen on 127.0.0.1:<port> from AI Settings.
+- Security: No raw SQL; use whitelisted report methods or controlled Frappe client queries.

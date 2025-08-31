@@ -1,0 +1,18 @@
+[Unit]
+Description=ERPNext Local Gemma LLM (llama.cpp llama-server)
+After=network.target
+
+[Service]
+Type=simple
+User=frappe
+Group=frappe
+ExecStart=/opt/erpnext-ai/bin/llama-server --host 127.0.0.1 --port {{PORT}} --model {{MODEL_PATH}} --ctx-size {{CTX_SIZE}} --n-predict {{N_PREDICT}} --parallel 2 --mlock --ngl {{NGL}}
+Restart=always
+RestartSec=5
+LimitNOFILE=65535
+WorkingDirectory=/opt/erpnext-ai
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
