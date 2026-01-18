@@ -1,0 +1,3 @@
+# guest_checkout/guest_checkout/modules.txt
+# This file defines the modules included in the `guest_checkout` app.
+# Add your module names here, each on a new line.

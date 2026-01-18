@@ -1,0 +1,1 @@
+# guest_checkout/guest_checkout/patches/__init__.py

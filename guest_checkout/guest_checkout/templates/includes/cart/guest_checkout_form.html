@@ -1,0 +1,43 @@
+<!-- guest_checkout/templates/includes/cart/guest_checkout_form.html -->
+{% if frappe.session.user == "Guest" %}
+<div class="guest-checkout-notice frappe-card p-4 mb-3">
+    <div class="d-flex align-items-center">
+        <div class="mr-3">
+            <i class="fa fa-info-circle fa-2x text-primary"></i>
+        </div>
+        <div>
+            <h5 class="mb-1">{{ _("Guest Checkout") }}</h5>
+            <p class="mb-0 text-muted">
+                {{ _("You're shopping as a guest. Click 'Place Order' to provide your details and complete checkout.") }}
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="guest-checkout-info frappe-card p-4">
+    <h6 class="mb-3">{{ _("Why create an account?") }}</h6>
+    <ul class="text-muted" style="font-size: 14px;">
+        <li>{{ _("Track your orders easily") }}</li>
+        <li>{{ _("Save addresses for faster checkout") }}</li>
+        <li>{{ _("View order history") }}</li>
+    </ul>
+    <a href="/login?redirect-to=/cart" class="btn btn-sm btn-outline-primary">
+        <i class="fa fa-user"></i> {{ _("Sign In or Create Account") }}
+    </a>
+</div>
+
+<style>
+.guest-checkout-notice {
+    border-left: 4px solid #66cfc7;
+    background: #f8f9fa;
+}
+
+.guest-checkout-info ul {
+    padding-left: 20px;
+}
+
+.guest-checkout-info ul li {
+    margin-bottom: 8px;
+}
+</style>
+{% endif %}

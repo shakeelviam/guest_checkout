@@ -1,0 +1,36 @@
+{% extends "webshop/templates/pages/checkout.html" %}
+
+{% block page_content %}
+<div class="checkout-container">
+    <h2>Choose Checkout Method</h2>
+    
+    <div class="checkout-options">
+        <button class="btn btn-primary" onclick="selectGuestCheckout()">Guest Checkout</button>
+        <button class="btn btn-secondary" onclick="selectAccountCheckout()">Login & Checkout</button>
+    </div>
+    
+    <div id="guest-checkout-form" style="display:none;">
+        <h3>Guest Checkout</h3>
+        <p>Complete your purchase without creating an account</p>
+        <!-- Guest form will be added here -->
+    </div>
+    
+    <div id="account-checkout-form" style="display:none;">
+        <h3>Login to Checkout</h3>
+        <p>Sign in to your account for faster checkout</p>
+        <!-- Login form will be added here -->
+    </div>
+</div>
+
+<script>
+function selectGuestCheckout() {
+    document.getElementById('guest-checkout-form').style.display = 'block';
+    document.getElementById('account-checkout-form').style.display = 'none';
+}
+
+function selectAccountCheckout() {
+    document.getElementById('guest-checkout-form').style.display = 'none';
+    document.getElementById('account-checkout-form').style.display = 'block';
+}
+</script>
+{% endblock %}
