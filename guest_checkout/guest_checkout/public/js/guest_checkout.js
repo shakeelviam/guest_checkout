@@ -65,49 +65,65 @@ guest_checkout.injectStyles = function() {
 
 // Set up event interceptors for guest checkout
 guest_checkout.setupEventInterceptors = function() {
-    // Button click interception - highest priority
-    $(document).on("click", ".btn-add-to-cart, [data-action=\"add-to-cart\"]", function(e) {
-        if (frappe.session.user === "Guest") {
+    // Use native addEventListener with capture phase for highest priority
+    document.addEventListener("click", function(e) {
+        if (frappe.session.user !== "Guest") return;
+        
+        // Check if click is on add to cart button
+        const target = e.target.closest(".btn-add-to-cart") || 
+                      e.target.closest("[data-action=\"add-to-cart\"]") ||
+                      (e.target.classList && e.target.classList.contains("btn-add-to-cart"));
+        
+        if (target) {
             e.preventDefault();
             e.stopPropagation();
-            console.log("Guest checkout: Button click intercepted");
+            e.stopImmediatePropagation();
+            console.log("Guest checkout: Button click intercepted (capture phase)");
             
             // Get item details
-            const $btn = $(this);
+            const $btn = $(target);
+            const $form = $btn.closest("form");
             const item_code = $btn.attr("data-item-code") || 
-                            $btn.closest("form").find("[name=\"item_code\"]").val();
-            const qty = parseInt($btn.closest("form").find("[name=\"qty\"]").val()) || 1;
+                            $btn.data("item-code") ||
+                            $form.find("[name=\"item_code\"]").val();
+            const qty = parseInt($form.find("[name=\"qty\"]").val()) || 1;
+            
+            console.log("Item details:", {item_code, qty});
             
             // Show guest checkout options
             guest_checkout.showOptions(item_code, qty);
             return false;
         }
-    });
+    }, true); // Use capture phase
     
-    // Form submit interception
-    $(document).on("submit", "form", function(e) {
-        // Only intercept cart-related forms for guest users
-        if (frappe.session.user === "Guest") {
-            const $form = $(this);
-            const action = $form.attr("action") || "";
-            const hasItemCode = $form.find("[name=\"item_code\"]").length > 0;
+    // Form submit interception with capture phase
+    document.addEventListener("submit", function(e) {
+        if (frappe.session.user !== "Guest") return;
+        
+        const form = e.target;
+        const action = form.getAttribute("action") || "";
+        const hasItemCode = form.querySelector("[name=\"item_code\"]") !== null;
+        
+        // Only intercept cart-related forms
+        if (action.includes("/cart") || action.includes("/api/method/webshop") || hasItemCode) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            console.log("Guest checkout: Form submission intercepted (capture phase)");
             
-            if (action.includes("/cart") || action.includes("/api/method/webshop") || hasItemCode) {
-                e.preventDefault();
-                console.log("Guest checkout: Form submission intercepted");
-                
-                // Get form data
-                const item_code = $form.find("[name=\"item_code\"]").val();
-                const qty = parseInt($form.find("[name=\"qty\"]").val()) || 1;
-                
-                // Show guest checkout options
-                if (item_code) {
-                    guest_checkout.showOptions(item_code, qty);
-                }
-                return false;
+            // Get form data
+            const item_code = form.querySelector("[name=\"item_code\"]")?.value;
+            const qty = parseInt(form.querySelector("[name=\"qty\"]")?.value) || 1;
+            
+            console.log("Form data:", {item_code, qty, action});
+            
+            // Show guest checkout options
+            if (item_code) {
+                guest_checkout.showOptions(item_code, qty);
             }
+            return false;
         }
-    });
+    }, true); // Use capture phase
     
     // Override shopping_cart if it exists
     if (typeof shopping_cart !== "undefined") {
