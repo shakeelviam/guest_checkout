@@ -275,9 +275,15 @@ def _get_cart_quotation_for_guest_or_user(party=None):
         qdoc.flags.ignore_permissions = True
         qdoc.run_method("set_missing_values")
         
+        # Clear payment schedule to prevent grand_total None error
+        qdoc.payment_schedule = []
+        
         # Apply cart settings
         from webshop.webshop.shopping_cart.cart import apply_cart_settings
         apply_cart_settings(party, qdoc)
+        
+        # Insert the quotation
+        qdoc.insert(ignore_permissions=True)
         
         quotation = qdoc
         
