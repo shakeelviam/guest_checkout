@@ -5,24 +5,252 @@ frappe.provide("guest_checkout");
 
 // Initialize guest checkout on page load
 $(document).ready(function() {
+    console.log("Guest checkout: Initializing...");
     guest_checkout.init();
 });
 
 guest_checkout.init = function() {
-    // Update cart count in navbar on page load
-    guest_checkout.update_cart_count();
+    // Create and inject required styles
+    guest_checkout.injectStyles();
     
-    // Override shopping_cart methods if they exist
-    if (typeof shopping_cart !== 'undefined') {
-        guest_checkout.override_shopping_cart();
+    // Only setup interception for guest users
+    if (frappe.session.user === "Guest") {
+        console.log("Guest checkout: Setting up for guest user");
+        guest_checkout.setupEventInterceptors();
+    } else {
+        console.log("Guest checkout: Logged in user - standard flow active");
     }
     
-    // Setup guest checkout button handlers
+    // Setup checkout handlers for both guest and logged-in users
     guest_checkout.setup_checkout_handlers();
     
-    // Listen for cart update events
-    $(document).on('cart_updated', function(e, data) {
-        guest_checkout.update_cart_display(data);
+    // Update cart count on page load
+    guest_checkout.update_cart_count();
+    
+    console.log("Guest checkout: Initialized successfully");
+};
+
+// Add required styles to head
+guest_checkout.injectStyles = function() {
+    if ($("#guest-checkout-styles").length === 0) {
+        $("head").append(`
+            <style id="guest-checkout-styles">
+                #guest-options-modal .modal-content {
+                    border-radius: 8px;
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                }
+                #guest-options-modal .option-card {
+                    border-radius: 6px;
+                    transition: all 0.2s ease;
+                    cursor: pointer;
+                    padding: 20px;
+                    height: 100%;
+                }
+                #guest-options-modal .option-card:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                }
+                #guest-options-modal .login-option {
+                    border: 1px solid #4273fa;
+                    background-color: #f8fbff;
+                }
+                #guest-options-modal .guest-option {
+                    border: 1px solid #66cfc7;
+                    background-color: #f8fffd;
+                }
+            </style>
+        `);
+    }
+};
+
+// Set up event interceptors for guest checkout
+guest_checkout.setupEventInterceptors = function() {
+    // Button click interception - highest priority
+    $(document).on("click", ".btn-add-to-cart, [data-action=\"add-to-cart\"]", function(e) {
+        if (frappe.session.user === "Guest") {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log("Guest checkout: Button click intercepted");
+            
+            // Get item details
+            const $btn = $(this);
+            const item_code = $btn.attr("data-item-code") || 
+                            $btn.closest("form").find("[name=\"item_code\"]").val();
+            const qty = parseInt($btn.closest("form").find("[name=\"qty\"]").val()) || 1;
+            
+            // Show guest checkout options
+            guest_checkout.showOptions(item_code, qty);
+            return false;
+        }
+    });
+    
+    // Form submit interception
+    $(document).on("submit", "form", function(e) {
+        // Only intercept cart-related forms for guest users
+        if (frappe.session.user === "Guest") {
+            const $form = $(this);
+            const action = $form.attr("action") || "";
+            const hasItemCode = $form.find("[name=\"item_code\"]").length > 0;
+            
+            if (action.includes("/cart") || action.includes("/api/method/webshop") || hasItemCode) {
+                e.preventDefault();
+                console.log("Guest checkout: Form submission intercepted");
+                
+                // Get form data
+                const item_code = $form.find("[name=\"item_code\"]").val();
+                const qty = parseInt($form.find("[name=\"qty\"]").val()) || 1;
+                
+                // Show guest checkout options
+                if (item_code) {
+                    guest_checkout.showOptions(item_code, qty);
+                }
+                return false;
+            }
+        }
+    });
+    
+    // Override shopping_cart if it exists
+    if (typeof shopping_cart !== "undefined") {
+        guest_checkout.originalUpdateCart = shopping_cart.update_cart;
+        shopping_cart.update_cart = function(opts) {
+            if (frappe.session.user === "Guest") {
+                console.log("Guest checkout: shopping_cart.update_cart intercepted");
+                guest_checkout.showOptions(opts.item_code, opts.qty || 1);
+                return false;
+            } else {
+                return guest_checkout.originalUpdateCart(opts);
+            }
+        };
+    }
+    
+    // Override webshop methods if they exist
+    if (typeof webshop !== "undefined" && webshop.webshop && webshop.webshop.shopping_cart) {
+        guest_checkout.originalWebshopUpdateCart = webshop.webshop.shopping_cart.update_cart;
+        webshop.webshop.shopping_cart.update_cart = function(opts) {
+            if (frappe.session.user === "Guest") {
+                console.log("Guest checkout: webshop.update_cart intercepted");
+                guest_checkout.showOptions(opts.item_code, opts.qty || 1);
+                return false;
+            } else {
+                return guest_checkout.originalWebshopUpdateCart(opts);
+            }
+        };
+    }
+};
+
+// Show guest checkout options modal
+guest_checkout.showOptions = function(item_code, qty) {
+    // Create modal if it doesn't exist
+    if (!$("#guest-options-modal").length) {
+        $("body").append(`
+            <div class="modal fade" id="guest-options-modal" tabindex="-1" role="dialog" 
+                 aria-labelledby="guest-options-title" aria-hidden="true" 
+                 data-backdrop="static" data-keyboard="false">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="guest-options-title">${__("Checkout Options")}</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="option-card login-option d-flex flex-column align-items-center text-center">
+                                        <i class="fas fa-user-circle fa-3x mb-3 text-primary"></i>
+                                        <h5>${__("Login")}</h5>
+                                        <p class="text-muted small">${__("Access your account for a faster checkout")}</p>
+                                        <button class="btn btn-primary btn-sm mt-2" id="login-option-btn">
+                                            ${__("Sign In")}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="option-card guest-option d-flex flex-column align-items-center text-center">
+                                        <i class="fas fa-shopping-cart fa-3x mb-3 text-success"></i>
+                                        <h5>${__("Guest Checkout")}</h5>
+                                        <p class="text-muted small">${__("Continue without creating an account")}</p>
+                                        <button class="btn btn-success btn-sm mt-2" id="guest-option-btn">
+                                            ${__("Continue as Guest")}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `);
+        
+        // Set up event handlers
+        $(document).on("click", "#login-option-btn", function() {
+            $("#guest-options-modal").modal("hide");
+            window.location.href = "/login?redirect-to=" + encodeURIComponent(window.location.pathname);
+        });
+        
+        $(document).on("click", "#guest-option-btn", function() {
+            $("#guest-options-modal").modal("hide");
+            guest_checkout.addToGuestCart(guest_checkout.currentItemCode, guest_checkout.currentQty);
+        });
+    }
+    
+    // Store current item details
+    guest_checkout.currentItemCode = item_code;
+    guest_checkout.currentQty = qty;
+    
+    // Show modal
+    $("#guest-options-modal").modal("show");
+};
+
+// Add item to guest cart
+guest_checkout.addToGuestCart = function(item_code, qty) {
+    frappe.show_alert({
+        message: __("Adding item to cart..."),
+        indicator: "blue"
+    });
+    
+    frappe.call({
+        method: "guest_checkout.guest_cart.update_cart_allow_guest",
+        args: {
+            item_code: item_code,
+            qty: qty
+        },
+        callback: function(r) {
+            if (r.message) {
+                frappe.show_alert({
+                    message: __("Item added to cart"),
+                    indicator: "green"
+                });
+                
+                // Update cart count
+                guest_checkout.updateCartCount();
+                
+                // Redirect to cart page
+                setTimeout(function() {
+                    window.location.href = "/cart";
+                }, 1000);
+            }
+        },
+        error: function(r) {
+            frappe.show_alert({
+                message: __("Failed to add item to cart"),
+                indicator: "red"
+            });
+        }
+    });
+};
+
+// Update cart count in navbar
+guest_checkout.updateCartCount = function() {
+    frappe.call({
+        method: "guest_checkout.guest_cart.get_shopping_cart_menu",
+        callback: function(r) {
+            if (r.message && r.message.cart_count !== undefined) {
+                // Update cart count elements
+                $(".cart-count, #cart-count").text(r.message.cart_count);
+            }
+        }
     });
 };
 

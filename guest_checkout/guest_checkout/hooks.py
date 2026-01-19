@@ -18,9 +18,7 @@ app_include_js = "/assets/guest_checkout/js/guest_checkout_shopping_cart.js"
 
 # IMPORTANT: Add web-specific JS for guest checkout functionality
 web_include_js = [
-    "/assets/guest_checkout/js/guest_checkout.js",
-    "/assets/guest_checkout/js/guest_login_modal.js",
-    "/assets/guest_checkout/js/guest_checkout_form.js"
+    "/assets/guest_checkout/js/guest_checkout.js"
 ]
 
 # Jinja Context
